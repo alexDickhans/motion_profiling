@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct Point {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Into<Vector2<f64>> for Point {
@@ -20,23 +20,23 @@ impl Into<Vector2<f64>> for Point {
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct PathSegment {
-    inverted: bool,
-    stop_end: bool,
-    path: Vec<Point>,
+    pub inverted: bool,
+    pub stop_end: bool,
+    pub path: Vec<Point>,
 }
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct Command {
-    t: f64,
-    name: String,
+    pub t: f64,
+    pub name: String,
 }
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct Path {
-    start_speed: f64,
-    end_speed: f64,
-    segments: Vec<PathSegment>,
-    commands: Vec<Command>,
+    pub start_speed: f64,
+    pub end_speed: f64,
+    pub segments: Vec<PathSegment>,
+    pub commands: Vec<Command>,
 }
