@@ -3,9 +3,9 @@ use nalgebra::Vector3;
 use uom::si::f64::{AngularVelocity, Velocity};
 
 pub struct MotionCommand {
-    pub desired_velocity: Velocity,
-    pub desired_angular: AngularVelocity,
-    pub desired_pose: Vector3<f64>,
+    desired_velocity: Velocity,
+    desired_angular: AngularVelocity,
+    desired_pose: Vector3<f64>,
 }
 
 pub trait MotionProfile {

@@ -18,7 +18,7 @@ impl MotionProfile2d {
 
 impl MotionProfile for MotionProfile2d {
     fn get_duration(&self) -> Duration {
-        Duration::from_millis(10)
+        Duration::from_millis((self.path.segments.last().unwrap().path.iter().last().unwrap().y * 1000.0) as _)
     }
 
     fn get(&mut self, _t: Duration) -> Option<MotionCommand> {
@@ -28,6 +28,6 @@ impl MotionProfile for MotionProfile2d {
 
 impl CombinedMP<MotionProfile2d> {
     pub fn new_2d(path: Path) -> Self {
-        Self::new(vec![])
+        Self::new(vec![MotionProfile2d::new(path)])
     }
 }
