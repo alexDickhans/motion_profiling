@@ -4,3 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+simba = { version = "0.9.0", default-features = false, features = [
+    "libm_force",
+] }
+nalgebra = { version = "0.33.0", default-features = false, features = [
+    "macros", "serde-serialize-no-std", "alloc"
+] }
+#vexide = { git = "https://github.com/vexide/vexide.git" }
+uom = { version = "0.36.0", default-features = false, features = ["f64", "si"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+serde = { version = "1.0.206", default-features = false, features = ["alloc", "derive"] }
