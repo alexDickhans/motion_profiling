@@ -4,7 +4,7 @@ extern crate alloc;
 pub mod path;
 pub mod motion_profile;
 pub mod mp_2d;
-mod combined_mp;
+pub mod combined_mp;
 
 #[cfg(test)]
 mod tests {
