@@ -12,5 +12,5 @@ nalgebra = { version = "0.33.0", default-features = false, features = [
 ] }
 #vexide = { git = "https://github.com/vexide/vexide.git" }
 uom = { version = "0.36.0", default-features = false, features = ["f64", "si"] }
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
-serde = { version = "1.0.206", default-features = false, features = ["alloc", "derive"] }
+serde_json = { version = "^1.0.125", default-features = false, features = ["alloc"] }
+serde = { version = "^1.0.208", default-features = false, features = ["alloc", "derive"] }

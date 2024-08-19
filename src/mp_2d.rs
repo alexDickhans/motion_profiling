@@ -1,3 +1,4 @@
+use alloc::vec;
 use core::time::Duration;
 use crate::combined_mp::CombinedMP;
 use crate::motion_profile::{MotionCommand, MotionProfile};
@@ -17,7 +18,7 @@ impl MotionProfile2d {
 
 impl MotionProfile for MotionProfile2d {
     fn get_duration(&self) -> Duration {
-        todo!()
+        Duration::from_millis(10)
     }
 
     fn get(&mut self, _t: Duration) -> Option<MotionCommand> {
@@ -27,6 +28,6 @@ impl MotionProfile for MotionProfile2d {
 
 impl CombinedMP<MotionProfile2d> {
     pub fn new_2d(path: Path) -> Self {
-        todo!()
+        Self::new(vec![])
     }
 }
