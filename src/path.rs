@@ -1,6 +1,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 use nalgebra::Vector2;
+#[cfg(feature="serde_support")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
