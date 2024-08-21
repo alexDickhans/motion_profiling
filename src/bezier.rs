@@ -5,6 +5,9 @@ use interp::interp;
 use nalgebra::{
     Matrix2x4, Matrix3x4, Matrix4, RowVector2, RowVector3, RowVector4, Vector2, Vector3, Vector4,
 };
+use num_traits::pow;
+#[allow(unused_imports)]
+use num_traits::Float;
 
 const BEZIER_MATRIX: Matrix4<f64> = Matrix4::new(
     -1.0, 3.0, -3.0, 1.0, 3.0, -6.0, 3.0, 0.0, -3.0, 3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
@@ -64,7 +67,7 @@ impl<const D: usize> Bezier<D> {
     }
 
     pub fn get(&self, t: f64) -> Vector3<f64> {
-        let t_vector = RowVector4::new(t.powi(3), t.powi(2), t, 1.0);
+        let t_vector = RowVector4::new(pow(t, 3), pow(t, 2), t, 1.0);
         let x = t_vector
             * BEZIER_MATRIX
             * Vector4::new(
@@ -88,7 +91,7 @@ impl<const D: usize> Bezier<D> {
     }
 
     pub fn get_d(&self, t: f64) -> Vector2<f64> {
-        let t_vector = RowVector3::new(t.powi(2), t, 1.0);
+        let t_vector = RowVector3::new(pow(t, 2), t, 1.0);
         let x = t_vector
             * BEZIER_D_MATRIX
             * Vector4::new(
@@ -132,7 +135,7 @@ impl<const D: usize> Bezier<D> {
     }
 
     pub fn get_curvature(&self, t: f64) -> f64 {
-        cross_2d(self.get_d(t), self.get_dd(t)) / self.get_d(t).magnitude().powi(3)
+        cross_2d(self.get_d(t), self.get_dd(t)) / pow(self.get_d(t).magnitude(), 3)
     }
 
     pub fn get_distance_by_t(&self, t: f64) -> f64 {

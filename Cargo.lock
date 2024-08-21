@@ -26,8 +26,7 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "interp"
 version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "530f1a6dab1502fc7dd5e193d08ed17c775c32c40894b75532533c6b1611f08b"
+source = "git+https://github.com/alexDickhans/interp-rs-no-std.git#db16c1396e928a02fc03d10137c7818e2aa7d603"
 dependencies = [
  "itertools",
  "num-traits",

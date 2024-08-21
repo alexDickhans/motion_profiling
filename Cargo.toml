@@ -15,7 +15,7 @@ nalgebra = { version = "0.33.0", default-features = false, features = [
 uom = { version = "0.36.0", default-features = false, features = ["f64", "si"] }
 serde_json = { version = "^1.0.125", default-features = false, features = ["alloc"], optional = true }
 serde = { version = "^1.0.208", default-features = false, features = ["alloc", "derive"], optional = true }
-interp = "1.0.3"
+interp = { git = "https://github.com/alexDickhans/interp-rs-no-std.git" }
 num-traits = { version = "0.2.19", default-features = false, features = ["libm"] }
 
 [features]

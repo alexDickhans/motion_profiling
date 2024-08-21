@@ -7,6 +7,8 @@ use alloc::vec::Vec;
 use core::cmp::max;
 use core::time::Duration;
 use interp::interp;
+#[allow(unused_imports)]
+use num_traits::Float;
 use uom::si::angular_velocity::radian_per_second;
 use uom::si::f64::{AngularVelocity, Velocity};
 use uom::si::velocity::meter_per_second;
