@@ -1,7 +1,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 use nalgebra::Vector2;
-#[cfg(feature="serde_support")]
+#[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -51,8 +51,8 @@ pub struct Path {
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec;
     use super::*;
+    use alloc::vec;
     #[cfg(feature = "serde_support")]
     use serde_json;
 

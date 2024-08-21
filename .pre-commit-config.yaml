@@ -8,6 +8,6 @@ repos:
       hooks:
           - id: cargo-test
             name: Run Cargo Test
-            entry: cargo test --all-targets
+            entry: cargo test --all-targets --
             language: system
             types: [ rust ]

@@ -3,8 +3,8 @@
 
 extern crate alloc;
 
-pub mod path;
+mod bezier;
+pub mod combined_mp;
 pub mod motion_profile;
 pub mod mp_2d;
-pub mod combined_mp;
-mod bezier;
+pub mod path;
