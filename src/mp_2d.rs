@@ -1,6 +1,6 @@
 use alloc::vec;
 use alloc::vec::Vec;
-use core::cmp::{max};
+use core::cmp::max;
 use core::time::Duration;
 use interp::interp;
 use uom::si::angular_velocity::radian_per_second;
@@ -14,6 +14,7 @@ use crate::path::{Path};
 
 pub struct MotionProfile2d {
     path: Vec<Bezier<50>>,
+    inverted: bool,
     /// (time, velocity, t)
     time_to_velocity: (Vec<f64>, Vec<f64>, Vec<f64>),
 }
@@ -21,8 +22,9 @@ pub struct MotionProfile2d {
 impl MotionProfile2d {
     fn new(path: Path, track_width: f64) -> Self {
         let mut res = Self {
+            inverted: path.segments.last().unwrap().inverted,
             path: path.segments.into_iter().filter_map(|path_segment| path_segment.try_into().ok()).collect(),
-            time_to_velocity: (vec![], vec![], vec![])
+            time_to_velocity: (vec![], vec![], vec![]),
         };
 
         res.compute(path.start_speed, path.end_speed, track_width);
@@ -38,78 +40,77 @@ impl MotionProfile2d {
         }
     }
 
-    fn limit_speed(unlimited_speed: Vec<(f64, f64, f64, f64)>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
-        let t_arr = unlimited_speed.iter().map(|speeds| speeds.3).collect();
-        let time = vec![];
+    fn limit_speed(unlimited_speed: Vec<(f64, f64, f64)>) -> Vec<f64> {
         let mut velocity = vec![unlimited_speed[0].1];
 
         for item in 1..unlimited_speed.len() {
             let delta_distance = (unlimited_speed[item].0 - unlimited_speed[item - 1].0).abs();
             velocity.push(
-                (unlimited_speed[item - 1].1.powi(2) + 2.0 * unlimited_speed[item - 1].2 * delta_distance).sqrt().min(unlimited_speed[item].1));
+                (velocity[item - 1].powi(2) + 2.0 * unlimited_speed[item].2 * delta_distance).sqrt()
+                    .min(unlimited_speed[item].1));
         }
 
-        (time, velocity, t_arr)
+        velocity
     }
     
     fn compute(&mut self, start_speed: f64, end_speed: f64, track_width: f64) {
-        // distance, speed, accel, t
-        let mut unlimited_speed = vec![(0.0, start_speed.min(Self::limited_speed(self.get_bezier(0.0).unwrap().get_curvature(0.0), track_width)), 0.0, 0.0)];
+        // distance, speed, accel
+        let mut unlimited_speed = vec![
+            (0.0,
+             start_speed.min(
+                 Self::limited_speed(self.path[0].get_curvature(0.0), track_width)
+             ),
+             self.path[0].accel)];
 
         let mut distance = 0.0;
 
-        for (index, bezier) in self.path.iter().enumerate() {
+        self.time_to_velocity.2.push(0.0);
+
+        for bezier in self.path.iter() {
             let length = bezier.get_length();
             let count = max(5, (length/0.02) as usize);
 
             for i in 1..=count {
                 let t = i as f64 / count as f64;
 
-                let curvature = bezier.get_curvature(t).min(bezier.vel);
+                self.time_to_velocity.2.push(i as f64 + t);
 
-                unlimited_speed.push((distance + bezier.get_distance_by_t(t), Self::limited_speed(curvature, track_width), bezier.accel, index as f64 + t));
+                let curvature = bezier.get_curvature(t);
+
+                unlimited_speed.push((distance + bezier.get_distance_by_t(t), Self::limited_speed(curvature, track_width) * bezier.vel, bezier.accel));
             }
 
             distance += length;
         }
 
-        assert!(!unlimited_speed.is_empty());
-
         let len = unlimited_speed.len()-1;
 
-        unlimited_speed[len].1 = end_speed.min(unlimited_speed[len].1);
+        unlimited_speed[len].1 = end_speed.min(unlimited_speed.last().unwrap().1);
 
-        let left_pass = unlimited_speed.clone();
         let mut right_pass = unlimited_speed.clone();
         right_pass.reverse();
-
-        assert_eq!(left_pass.len(), unlimited_speed.len());
-        assert_eq!(right_pass.len(), unlimited_speed.len());
-
-        let left_pass_limited = Self::limit_speed(left_pass);
+        let left_pass = Self::limit_speed(unlimited_speed.clone());
         let mut right_pass_limited = Self::limit_speed(right_pass);
-        right_pass_limited.0.reverse();
-        right_pass_limited.1.reverse();
-        right_pass_limited.2.reverse();
+        right_pass_limited.reverse();
 
-        assert_eq!(right_pass_limited.2.len(), unlimited_speed.len());
-        assert_eq!(right_pass_limited.1.len(), unlimited_speed.len());
-
-        self.time_to_velocity.2 = right_pass_limited.2;
+        assert_eq!(right_pass_limited.len(), unlimited_speed.len());
 
         for (i, unlimited) in unlimited_speed.iter_mut().enumerate() {
-            unlimited.1 = left_pass_limited.1[i].min(right_pass_limited.1[i]);
+            unlimited.1 = left_pass[i].min(right_pass_limited[i]);
         }
 
         let mut time = 0.0;
 
+        self.time_to_velocity.0.push(0.0);
+        self.time_to_velocity.1.push(unlimited_speed[0].1);
+
         for i in 1..unlimited_speed.len() {
             // add stuff to current time
             let delta_distance = unlimited_speed[i].0 - unlimited_speed[i-1].0;
-            let a =
-                (unlimited_speed[i].1.powi(2) - unlimited_speed[i-1].1.powi(2)) / (2.0 * delta_distance);
+            let change_v = unlimited_speed[i].1.powi(2) - unlimited_speed[i-1].1.powi(2);
+            let a = change_v / (2.0 * delta_distance);
 
-            if a.abs() > 0.0001 {
+            if a.abs() > 0.01 {
                 time += (unlimited_speed[i].1 - unlimited_speed[i-1].1) / a;
             } else {
                 time += delta_distance / unlimited_speed[i].1;
@@ -127,6 +128,7 @@ impl MotionProfile2d {
 
 impl MotionProfile for MotionProfile2d {
     fn duration(&self) -> Duration {
+        assert!(self.time_to_velocity.0.last().unwrap().is_finite(), "Time is not finite");
         Duration::from_secs_f64(*self.time_to_velocity.0.last().expect("Array should not be empty"))
     }
 
@@ -138,12 +140,14 @@ impl MotionProfile for MotionProfile2d {
             let bezier = self.get_bezier(t)?;
             let t_local = t % 1.0;
 
+            let inverted_multiplier = if self.inverted { -1.0 } else { 1.0 };
+
             let desired_velocity = Velocity::new::<meter_per_second>(interp(&self.time_to_velocity.0, &self.time_to_velocity.1, time.as_secs_f64()));
             let curvature = bezier.get_curvature(t_local);
 
             Some(
                 MotionCommand {
-                    desired_velocity,
+                    desired_velocity: inverted_multiplier * desired_velocity,
                     desired_angular: AngularVelocity::new::<radian_per_second>(desired_velocity.get::<meter_per_second>() * curvature),
                     desired_pose: bezier.get(t_local),
                 }
@@ -197,9 +201,22 @@ mod tests {
     fn create_mock_path() -> Path {
         // Create a mock path with dummy segments
         Path {
-            start_speed: 1.0,
-            end_speed: 0.5,
-            segments: vec![PathSegment{ inverted: false, stop_end: false, path: vec![Point{ x: 0.0, y: 0.0 }, Point{ x: 1.0, y: 0.0 }, Point{ x: 0.0, y: 1.0 }, Point{ x: 1.0, y: 1.0 }], constraints: Constraints { velocity: 1.0, accel: 1.0 } }], // You may need to customize this for your actual tests
+            start_speed: 0.0,
+            end_speed: 0.0,
+            segments: vec![
+                PathSegment{ inverted: false, stop_end: false, path: vec![
+                    Point{ x: 0.0, y: 0.0 },
+                    Point{ x: 1.0, y: 0.0 },
+                    Point{ x: 0.0, y: 1.0 },
+                    Point{ x: 1.0, y: 1.0 }],
+                    constraints: Constraints { velocity: 1.0, accel: 1.0 } },
+                PathSegment{ inverted: false, stop_end: false, path: vec![
+                    Point{ x: 0.0, y: 0.0 },
+                    Point{ x: 1.0, y: 0.0 },
+                    Point{ x: 0.0, y: 1.0 },
+                    Point{ x: 1.0, y: 1.0 }],
+                    constraints: Constraints { velocity: 1.0, accel: 1.0 } }
+            ],
             commands: vec![],
         }
     }
@@ -253,6 +270,8 @@ mod tests {
         let duration = profile.duration();
 
         assert!(duration.as_secs_f64() > 0.0, "Duration should be greater than zero after computation");
+        assert!(duration.as_secs_f64().is_finite(), "Duration should be finite");
+
     }
 
     #[test]
@@ -286,5 +305,21 @@ mod tests {
         let combined_profile = CombinedMP::try_new_2d(path, track_width);
 
         assert!(combined_profile.is_some(), "Combined motion profile should be created successfully");
+    }
+
+    #[test]
+    #[cfg(feature = "serde_support")]
+    fn test_json_decoding() {
+        let path: Path = serde_json::from_str(include_str!("test/test.json")).expect("Failed to decode json path file");
+
+        let track_width = 10.0/39.37;
+
+        let profile = CombinedMP::try_new_2d(path, track_width).expect("Failed to create motion profile");
+
+        let duration = profile.duration();
+
+        // Test that the computation is correctly run and values are calculated
+        assert!(duration.as_secs_f64() > 0.0, "Duration should be greater than zero after computation");
+        assert!(duration.as_secs_f64().is_finite(), "Duration should be finite");
     }
 }
