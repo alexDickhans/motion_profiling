@@ -194,11 +194,12 @@ impl CombinedMP<MotionProfile2d> {
 
         let mut segments = vec![segment_iter.next()?];
 
-        let last_inverted = segments[0].inverted;
+        let mut last_inverted = segments[0].inverted;
 
         for segment in segment_iter {
             if (segment.inverted ^ last_inverted) || segment.stop_end {
                 if !segments.is_empty() {
+                    last_inverted = segment.inverted;
                     paths.push(Path {
                         start_speed: path.start_speed,
                         end_speed: 0.0,
@@ -395,8 +396,8 @@ mod tests {
 
     #[test]
     #[cfg(feature = "serde_support")]
-    fn test_json_decoding() {
-        let path: Path = serde_json::from_str(include_str!("test/test.json"))
+    fn test_json_decoding_0() {
+        let path: Path = serde_json::from_str(include_str!("test/test-0.json"))
             .expect("Failed to decode json path file");
 
         let track_width = 10.0 / 39.37;
@@ -415,5 +416,31 @@ mod tests {
             duration.as_secs_f64().is_finite(),
             "Duration should be finite"
         );
+        assert_eq!(profile.len(), 1, "Profile should have length 1");
+    }
+
+    #[test]
+    #[cfg(feature = "serde_support")]
+    fn test_json_decoding_1() {
+        let path: Path = serde_json::from_str(include_str!("test/test-1.json"))
+            .expect("Failed to decode json path file");
+
+        let track_width = 10.0 / 39.37;
+
+        let profile =
+            CombinedMP::try_new_2d(path, track_width).expect("Failed to create motion profile");
+
+        let duration = profile.duration();
+
+        // Test that the computation is correctly run and values are calculated
+        assert!(
+            duration.as_secs_f64() > 0.0,
+            "Duration should be greater than zero after computation"
+        );
+        assert!(
+            duration.as_secs_f64().is_finite(),
+            "Duration should be finite"
+        );
+        assert_eq!(profile.len(), 3, "Profile should contain 3 segments");
     }
 }

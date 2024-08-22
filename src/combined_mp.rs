@@ -10,6 +10,10 @@ impl<T: MotionProfile> CombinedMP<T> {
     pub fn new(motion_profiles: Vec<T>) -> Self {
         Self { motion_profiles }
     }
+
+    pub fn len(&self) -> usize {
+        self.motion_profiles.iter().len()
+    }
 }
 
 impl<T: MotionProfile> MotionProfile for CombinedMP<T> {
