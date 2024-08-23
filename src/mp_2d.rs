@@ -5,6 +5,7 @@ use crate::path::Path;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cmp::max;
+use core::f64::consts::TAU;
 use core::time::Duration;
 use interp::interp;
 #[allow(unused_imports)]
@@ -177,7 +178,7 @@ impl MotionProfile for MotionProfile2d {
 
             let mut pose = bezier.get(t_local);
 
-            pose.z = inverted_multiplier * pose.z;
+            pose.z = if self.inverted { TAU } else { 0.0 } + pose.z;
 
             Some(MotionCommand {
                 desired_velocity: inverted_multiplier * desired_velocity,
