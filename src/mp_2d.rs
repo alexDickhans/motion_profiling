@@ -175,12 +175,16 @@ impl MotionProfile for MotionProfile2d {
             ));
             let curvature = bezier.get_curvature(t_local);
 
+            let mut pose = bezier.get(t_local);
+
+            pose.z = inverted_multiplier * pose.z;
+
             Some(MotionCommand {
                 desired_velocity: inverted_multiplier * desired_velocity,
                 desired_angular: AngularVelocity::new::<radian_per_second>(
                     desired_velocity.get::<meter_per_second>() * curvature,
                 ),
-                desired_pose: bezier.get(t_local),
+                desired_pose: pose,
             })
         }
     }

@@ -11,7 +11,6 @@ simba = { version = "0.9.0", default-features = false, features = [
 nalgebra = { version = "0.33.0", default-features = false, features = [
     "macros", "alloc"
 ] }
-#vexide = { git = "https://github.com/vexide/vexide.git" }
 uom = { version = "0.36.0", default-features = false, features = ["f64", "si"] }
 serde_json = { version = "^1.0.125", default-features = false, features = ["alloc"], optional = true }
 serde = { version = "^1.0.208", default-features = false, features = ["alloc", "derive"], optional = true }
