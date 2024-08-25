@@ -42,7 +42,7 @@ impl MotionProfile2d {
         if curvature == 0.0 || !curvature.is_finite() {
             1.0
         } else {
-            1.0 / (1.0 + (curvature * 0.5) * track_width).abs()
+            1.0 / (1.0 + (curvature * 0.5).abs() * track_width)
         }
     }
 
